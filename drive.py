@@ -27,13 +27,18 @@ def main():
 
         video = device.getOutputQueue(name="video", maxSize=1, blocking=False)
 
+        # Create VESC Object
+
         while True:
             videoIn = video.get()
 
             orig_frame = videoIn.getCvFrame()
 
-            lane_detection.main(orig_frame)
+            # Get steering and throttle from lane_detection
 
+            # If necessary, use previous value and add weight
+            
+            # Use VESC.run() to set steering and throttle
 
 if __name__ == '__main__':
     main()
