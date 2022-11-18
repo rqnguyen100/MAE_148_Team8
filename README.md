@@ -1,1 +1,1 @@
-# MAE_148_Team8
+# MAE_148_Team8_OpenCV
