@@ -1,6 +1,10 @@
 import cv2
 import numpy as np
 
+# Add a motor controller class that can get line information
+# and calculate throttle and steering based on line trajectory/angle
+# If possible, implement a visual aid to show onto frame
+
 def in_bounds(x1, x2, y1, y2, width, height): # function to make sure points in image
     if x1 > width:
         x1 = width
@@ -167,11 +171,9 @@ def main(video=cv2.VideoCapture("run1.mp4")):
             count2 += 1
 
         cv2.imshow("frame", frame)
-        # cv2.imshow("canny", lane_roi)
-        # cv2.imshow("edges", lane_lines_plotted)
-        # cv2.imshow("final line", final_lines_mask)
 
         # press q to break program
+        # remove in final product
         if __name__ == '__main__':
             if cv2.waitKey(1) & 0xff ==ord('q'):
                 print("Frames with no lines detected:", count1)
