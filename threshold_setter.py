@@ -1,6 +1,5 @@
 import cv2 as cv2 #importing the library
 import numpy as np
-import matplotlib.pyplot as plt8
 
 def lowerCallback(val):
     global lower_thresh
@@ -37,7 +36,7 @@ def find_canny(img,thresh_low,thresh_high): #function for implementing the canny
 
 def region_of_interest(image): #function for extracting region of interest
     #bounds in (x,y) format
-    bounds = np.array([[[0,698],[0,300],[650,300],[650,698]]],dtype=np.int32)
+    bounds = np.array([[[0,698],[0,250],[650,250],[650,698]]],dtype=np.int32)
     
     # bounds = np.array([[[0,image.shape[0]],[0,image.shape[0]/2],[900,image.shape[0]/2],[900,image.shape[0]]]],dtype=np.int32)
     mask=np.zeros_like(image)
@@ -55,31 +54,39 @@ def draw_lines(img,lines): #function for drawing lines on black mask
     return mask_lines
 
 ## Initialization
-image = cv2.imread('images/3473_cam_image_array_.jpg') #Reading the image file
+image = cv2.imread('images_2/669_cam_image_array_.jpg') #Reading the image file
 lane_image = np.copy(image)
-height = lane_image.shape[0]
-width  = lane_image.shape[1]
 lane_image = cv2.resize(lane_image,(650,500))
+height = lane_image.shape[0]; width  = lane_image.shape[1]
 
 ## Trackbars
-lower_thresh = 35; upper_thresh = 115
-thresh=40; minLine=20; maxGap = 10
-cv2.namedWindow('My Trackbars')
-cv2.resizeWindow('My Trackbars', 400, 100)
-cv2.createTrackbar('Canny Lower','My Trackbars',0,250, lowerCallback)
-cv2.createTrackbar('Canny Upper','My Trackbars',0,250, upperCallback)
-cv2.createTrackbar('HL Thresh','My Trackbars',0,100, threshCallback)
-cv2.createTrackbar('HL MinLineLength','My Trackbars',0,100, minCallback)
-cv2.createTrackbar('HL MaxLineGap','My Trackbars',0,100, maxCallback)
+lower_thresh = 50; upper_thresh = 150
+thresh=30; minLine=5; maxGap = 100
+# cv2.namedWindow('My Trackbars')
+# cv2.resizeWindow('My Trackbars', 400, 100)
+# cv2.createTrackbar('Canny Lower','My Trackbars',0,250, lowerCallback)
+# cv2.createTrackbar('Canny Upper','My Trackbars',0,250, upperCallback)
+# cv2.createTrackbar('HL Thresh','My Trackbars',0,100, threshCallback)
+# cv2.createTrackbar('HL MinLineLength','My Trackbars',0,100, minCallback)
+# cv2.createTrackbar('HL MaxLineGap','My Trackbars',0,100, maxCallback)
 
-lane_roi = region_of_interest(lane_image)
-lane_canny = find_canny(lane_roi,lower_thresh,upper_thresh)
-cv2.imshow('nice', lane_roi)
+# Range for upper range
+hsv = cv2.cvtColor(lane_image,cv2.COLOR_BGR2HSV)
+lower = np.array([22, 93, 0])
+upper = np.array([45, 255, 255])
+mask_yellow = cv2.inRange(hsv, lower, upper)
+yellow_output = cv2.bitwise_and(lane_image, lane_image, mask=mask_yellow)
 
 while True:
-    # lane_lines = cv2.HoughLinesP(lane_roi,rho=1,theta=np.pi/180,threshold=thresh,minLineLength=minLine,maxLineGap=maxGap)
-    # lane_lines_plotted = draw_lines(lane_image,lane_lines)
-    # cv2.imshow('track', lane_lines_plotted)
+    ## set canny threshold values
+    lane_canny = find_canny(yellow_output,lower_thresh,upper_thresh)
+    lane_roi = region_of_interest(lane_canny)
+    # cv2.imshow('canny frame', lane_roi)
+
+    ## set HL threshold values
+    lane_lines = cv2.HoughLinesP(lane_roi,rho=1,theta=np.pi/180,threshold=thresh,minLineLength=minLine,maxLineGap=maxGap)
+    lane_lines_plotted = draw_lines(lane_image,lane_lines)
+    cv2.imshow('track', lane_lines_plotted)
     # cv2.moveWindow('track', 200, 0)
     if cv2.waitKey(1) & 0xff ==ord('q'):
         break
