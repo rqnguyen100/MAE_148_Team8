@@ -6,28 +6,47 @@ import numpy as np
 # If possible, implement a visual aid to show onto frame
 
 def in_bounds(x1, x2, y1, y2, width, height): # function to make sure points in image
+
+    # if you remove this function, the lines actually follow edge detection
+    # but, this is used for when the algorithm doesn't detect any 
+    # and is life saver otherwise no data
+
+    offset = 100
+
     if x1 > width:
-        x1 = width
+        x1 = width - offset
     elif x1 < 0:
         x1 = 0
 
     if x2 > width:
         x2 = width 
     elif x2 < 0:
-        x2 = 0
+        x2 = offset
 
     if y1 > height:
-        y1 = height   
+        y1 = height
     elif y1 < 0:
         y1 = 0
     
     if y2 > height:
-        y2 = height   
+        y2 = height
     elif y2 < 0:
         y2 = 0
     return x1, y1, x2, y2
 
+def previous_weight(x1o, x2o, y1o, y2o, x1n, x2n, y1n, y2n, scale):
+    # function to scale new points based on previous ones
+    # higher scale values means more weight on older values
+
+    x1 = int(scale*x1o + (1-scale)*x1n)
+    x2 = int(scale*x2o + (1-scale)*x2n)
+    y1 = int(scale*y1o + (1-scale)*y1n)
+    y2 = int(scale*y2o + (1-scale)*y2n)
+
+    return x1, x2, y1, y2
+
 def find_canny(img,thresh_low,thresh_high): #function for implementing the canny
+
     # turns image to monocolor to make it easier to detect contrast in edges
     img_gray = cv2.cvtColor(img,cv2.COLOR_BGR2GRAY) 
 
@@ -39,9 +58,10 @@ def find_canny(img,thresh_low,thresh_high): #function for implementing the canny
     return img_canny
 
 def region_of_interest(image): #function for extracting region of interest
+
     # identify bounds in (x,y) format
     # currently targeting the lower half of the image
-    bounds = np.array([[[0,698],[0,300],[650,300],[650,698]]],dtype=np.int32)
+    bounds = np.array([[[0,698],[0,250],[650,250],[650,698]]],dtype=np.int32)
 
     # creates mask and returns specified region
     mask=np.zeros_like(image)
@@ -57,7 +77,7 @@ def draw_lines(img,lines,width,height): #function for drawing lines on black mas
         # if point is past image size, reset to max or min location
         x1,y1,x2,y2 = in_bounds(x1,x2,y1,y2,width,height)
 
-        cv2.line(mask_lines,(x1,y1),(x2,y2),[0,0,255],2)
+        # cv2.line(mask_lines,(x1,y1),(x2,y2),[0,0,255],2)
 
     return mask_lines
 
@@ -70,7 +90,8 @@ def get_coordinates(img,line_parameters): #functions for getting final coordinat
     x2 = int((y2-intercept)/slope)
     return [x1,int(y1),x2,int(y2)]
 
-def compute_average_lines(img,lines):
+def compute_average_lines(img,lines,width,height):
+
     left_lane_lines=[]
     right_lane_lines=[]
     left_weights=[]
@@ -107,18 +128,18 @@ def compute_average_lines(img,lines):
     try:
         left_fit_points = get_coordinates(img,left_average_line)
     except:
-        left_fit_points = [100, 250, 0, 600]
+        left_fit_points = [200, height, 0, height - 400]
 
     # if right lane is not detected, create own right lane
     # bias the line towards the right
     try:
         right_fit_points = get_coordinates(img,right_average_line)
     except:
-        right_fit_points = [500, 600, 600, 250]
-    
+        right_fit_points = [width, height - 400, width - 200, height]
+
     return [[left_fit_points],[right_fit_points]] #returning the final coordinates
 
-def main(video=cv2.VideoCapture("run1.mp4")):
+def main(video=cv2.VideoCapture("lap2.mp4")):
 
     True_Counter = True # import shenanigans
 
@@ -126,8 +147,13 @@ def main(video=cv2.VideoCapture("run1.mp4")):
     count2 = 0 # no avg lines counter
     
     # initialize tuning parameters
-    canny_lower = 35; canny_upper = 115
-    hl_thresh = 31; hl_minLength = 24; hl_maxGap = 19
+    canny_lower = 60; canny_upper = 110
+    hl_thresh = 30; hl_minLength = 20; hl_maxGap = 10
+    scale = 0.1
+
+    # hsv parameters
+    # canny_lower = 50; canny_upper = 150
+    # hl_thresh = 30; hl_minLength = 5; hl_maxGap = 100
 
     while True_Counter:
         if __name__ == '__main__':
@@ -139,6 +165,14 @@ def main(video=cv2.VideoCapture("run1.mp4")):
         frame = np.copy(orig_frame)
         height = frame.shape[0]
         width  = frame.shape[1]
+
+        # # hsv shenanigans
+        # hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
+        # lower_yellow = np.array([22, 93, 0])
+        # upper_yellow = np.array([45, 255, 255])
+        # mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
+        # yellow_output = cv2.bitwise_and(frame, frame, mask=mask_yellow)
+        # edges = find_canny(yellow_output, canny_lower, canny_upper)
 
         # implement canny function and HL transform on ROI
         edges = find_canny(frame, canny_lower, canny_upper)
@@ -155,7 +189,7 @@ def main(video=cv2.VideoCapture("run1.mp4")):
         # wrapped in t/e because creahes if no average line detected
         try:
             # computes a left and right line based on all lines detected
-            result_lines = compute_average_lines(frame,lines)
+            result_lines = compute_average_lines(frame,lines,width,height)
             final_lines_mask = draw_lines(frame,result_lines,width,height)
 
             if result_lines is not None:
@@ -164,8 +198,16 @@ def main(video=cv2.VideoCapture("run1.mp4")):
                     x1,y1,x2,y2 = line[0]
                     # if point is past image size, reset to max or min location
                     x1,y1,x2,y2 = in_bounds(x1,x2,y1,y2,width,height)
+
+                    # adds previous weight to points after a while
+                    if count1 > 10:
+                        x1,y1,x2,y2 = previous_weight(x1o,x2o,y1o,y2o,x1,y1,x2,y2,scale)
     
                     cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
+
+
+                # set new points to previous points
+                x1o = x1; x2o = x2; y1o = y1; y2o = y2
         except:
             # logs if a frame doesn't have an average line
             count2 += 1
