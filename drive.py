@@ -25,20 +25,24 @@ def main():
     
     with dai.Device(pipeline) as device:
 
+        # get video from camera
         video = device.getOutputQueue(name="video", maxSize=1, blocking=False)
 
         # Create VESC Object
+        # carVESC = VESC('/dev/ttyACM0') 
 
         while True:
+            # get frame from camera
             videoIn = video.get()
-
             orig_frame = videoIn.getCvFrame()
 
-            # Get steering and throttle from lane_detection
+            # calculate steering and throttle based on lane_detection
+            steering, throttle = lane_detection.main(orig_frame)
 
-            # If necessary, use previous value and add weight
+            print(steering, throttle)
             
             # Use VESC.run() to set steering and throttle
+            # carVESC.run(steering,throttle)
 
 if __name__ == '__main__':
     main()

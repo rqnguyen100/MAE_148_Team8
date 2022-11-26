@@ -1,17 +1,14 @@
 import cv2
 import numpy as np
-
-# Add a motor controller class that can get line information
-# and calculate throttle and steering based on line trajectory/angle
-# If possible, implement a visual aid to show onto frame
-
+import controller_class as mC
+        
 def in_bounds(x1, x2, y1, y2, width, height): # function to make sure points in image
 
     # if you remove this function, the lines actually follow edge detection
     # but, this is used for when the algorithm doesn't detect any 
     # and is life saver otherwise no data
 
-    offset = 100
+    offset = 20
 
     if x1 > width:
         x1 = width - offset
@@ -32,6 +29,7 @@ def in_bounds(x1, x2, y1, y2, width, height): # function to make sure points in 
         y2 = height
     elif y2 < 0:
         y2 = 0
+
     return x1, y1, x2, y2
 
 def previous_weight(x1o, x2o, y1o, y2o, x1n, x2n, y1n, y2n, scale):
@@ -57,11 +55,11 @@ def find_canny(img,thresh_low,thresh_high): #function for implementing the canny
     img_canny = cv2.Canny(img_blur,thresh_low,thresh_high)
     return img_canny
 
-def region_of_interest(image): #function for extracting region of interest
+def region_of_interest(image, width, height): #function for extracting region of interest
 
     # identify bounds in (x,y) format
     # currently targeting the lower half of the image
-    bounds = np.array([[[0,698],[0,250],[650,250],[650,698]]],dtype=np.int32)
+    bounds = np.array([[[0,height],[0,height/2],[width,height/2],[width,height]]],dtype=np.int32)
 
     # creates mask and returns specified region
     mask=np.zeros_like(image)
@@ -128,20 +126,31 @@ def compute_average_lines(img,lines,width,height):
     try:
         left_fit_points = get_coordinates(img,left_average_line)
     except:
-        left_fit_points = [200, height, 0, height - 400]
+        left_fit_points = [0, height - 400, 200, height]
+        print("no left")
 
     # if right lane is not detected, create own right lane
     # bias the line towards the right
     try:
         right_fit_points = get_coordinates(img,right_average_line)
     except:
-        right_fit_points = [width, height - 400, width - 200, height]
+        right_fit_points = [width - 200, height, width, height - 400]
+        print("no right")
 
     return [[left_fit_points],[right_fit_points]] #returning the final coordinates
 
-def main(video=cv2.VideoCapture("lap2.mp4")):
+def main(video=cv2.VideoCapture("lap5.mp4")):
+    # lap1.mp4 is unedited full track
+    # lap2.mp4 is right turn tester
+    # lap3.mp4 is edited full track
+    # lap4.mp4 is straight tester
+    # lap4.mp4 is left turn tester
 
-    True_Counter = True # import shenanigans
+    # initialize controller class
+    car = mC.motorController()
+
+    # needed to run file as main and as import
+    True_Counter = True
 
     count1 = 0 # no lines counter
     count2 = 0 # no avg lines counter
@@ -150,10 +159,6 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
     canny_lower = 60; canny_upper = 110
     hl_thresh = 30; hl_minLength = 20; hl_maxGap = 10
     scale = 0.1
-
-    # hsv parameters
-    # canny_lower = 50; canny_upper = 150
-    # hl_thresh = 30; hl_minLength = 5; hl_maxGap = 100
 
     while True_Counter:
         if __name__ == '__main__':
@@ -166,17 +171,9 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
         height = frame.shape[0]
         width  = frame.shape[1]
 
-        # # hsv shenanigans
-        # hsv = cv2.cvtColor(frame,cv2.COLOR_BGR2HSV)
-        # lower_yellow = np.array([22, 93, 0])
-        # upper_yellow = np.array([45, 255, 255])
-        # mask_yellow = cv2.inRange(hsv, lower_yellow, upper_yellow)
-        # yellow_output = cv2.bitwise_and(frame, frame, mask=mask_yellow)
-        # edges = find_canny(yellow_output, canny_lower, canny_upper)
-
         # implement canny function and HL transform on ROI
         edges = find_canny(frame, canny_lower, canny_upper)
-        lane_roi = region_of_interest(edges)
+        lane_roi = region_of_interest(edges, width, height)
         lines = cv2.HoughLinesP(lane_roi, 1, np.pi/180, hl_thresh, hl_minLength, hl_maxGap)
 
         # wrapped in try and except because crashes if no line detected
@@ -194,6 +191,9 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
 
             if result_lines is not None:
                 # plots line on final image
+
+                line_counter = 0 # counter for number of lines
+
                 for line in result_lines:
                     x1,y1,x2,y2 = line[0]
                     # if point is past image size, reset to max or min location
@@ -202,9 +202,20 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
                     # adds previous weight to points after a while
                     if count1 > 10:
                         x1,y1,x2,y2 = previous_weight(x1o,x2o,y1o,y2o,x1,y1,x2,y2,scale)
-    
+
+                    # edge detection lines
                     cv2.line(frame, (x1, y1), (x2, y2), (0, 255, 0), 5)
 
+                    # to be used to find average value
+                    xSum = x1 + x2; ySum = y1 + y2;
+                    line_counter += 1
+
+                xAvg = int(xSum/line_counter); yAvg = int(ySum/line_counter)
+
+                # gets angle, steering, and throttle value
+                angle, steering, throttle = car.getControllerVal(xAvg,yAvg,width)
+                x1s, x2s, y1s, y2s = car.steeringLine(angle, throttle, width, height)
+                cv2.line(frame, (x1s, y1s), (x2s, y2s), (255, 255, 255), 10)    
 
                 # set new points to previous points
                 x1o = x1; x2o = x2; y1o = y1; y2o = y2
@@ -224,6 +235,7 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
         else:
             cv2.waitKey(1)
             True_Counter = False
+            return steering, throttle
 
 if __name__ == '__main__':
     main()

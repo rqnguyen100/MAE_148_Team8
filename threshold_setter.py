@@ -54,7 +54,7 @@ def draw_lines(img,lines): #function for drawing lines on black mask
     return mask_lines
 
 ## Initialization
-image = cv2.imread('images_2/669_cam_image_array_.jpg') #Reading the image file
+image = cv2.imread('images_2/1118_cam_image_array_.jpg') #Reading the image file
 lane_image = np.copy(image)
 lane_image = cv2.resize(lane_image,(650,500))
 height = lane_image.shape[0]; width  = lane_image.shape[1]
@@ -71,22 +71,23 @@ thresh=30; minLine=5; maxGap = 100
 # cv2.createTrackbar('HL MaxLineGap','My Trackbars',0,100, maxCallback)
 
 # Range for upper range
-hsv = cv2.cvtColor(lane_image,cv2.COLOR_BGR2HSV)
-lower = np.array([22, 93, 0])
-upper = np.array([45, 255, 255])
-mask_yellow = cv2.inRange(hsv, lower, upper)
-yellow_output = cv2.bitwise_and(lane_image, lane_image, mask=mask_yellow)
+# hsv = cv2.cvtColor(lane_image,cv2.COLOR_BGR2HSV)
+# lower = np.array([22, 93, 0])
+# upper = np.array([45, 255, 255])
+# mask_yellow = cv2.inRange(hsv, lower, upper)
+# yellow_output = cv2.bitwise_and(lane_image, lane_image, mask=mask_yellow)
+cv2.imshow("frame", lane_image)
 
 while True:
     ## set canny threshold values
-    lane_canny = find_canny(yellow_output,lower_thresh,upper_thresh)
     lane_roi = region_of_interest(lane_canny)
-    # cv2.imshow('canny frame', lane_roi)
+    lane_canny = find_canny(lane_image,lower_thresh,upper_thresh)
+    cv2.imshow('canny frame', lane_roi)
 
     ## set HL threshold values
-    lane_lines = cv2.HoughLinesP(lane_roi,rho=1,theta=np.pi/180,threshold=thresh,minLineLength=minLine,maxLineGap=maxGap)
-    lane_lines_plotted = draw_lines(lane_image,lane_lines)
-    cv2.imshow('track', lane_lines_plotted)
+    # lane_lines = cv2.HoughLinesP(lane_roi,rho=1,theta=np.pi/180,threshold=thresh,minLineLength=minLine,maxLineGap=maxGap)
+    # lane_lines_plotted = draw_lines(lane_image,lane_lines)
+    # cv2.imshow('track', lane_lines_plotted)
     # cv2.moveWindow('track', 200, 0)
     if cv2.waitKey(1) & 0xff ==ord('q'):
         break
