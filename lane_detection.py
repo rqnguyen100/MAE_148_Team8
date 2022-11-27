@@ -144,7 +144,7 @@ def main(video=cv2.VideoCapture("lap5.mp4")):
     # lap2.mp4 is right turn tester
     # lap3.mp4 is edited full track
     # lap4.mp4 is straight tester
-    # lap4.mp4 is left turn tester
+    # lap5.mp4 is left turn tester
 
     # initialize controller class
     car = mC.motorController()
