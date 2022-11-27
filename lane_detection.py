@@ -127,7 +127,7 @@ def compute_average_lines(img,lines,width,height):
         left_fit_points = get_coordinates(img,left_average_line)
     except:
         left_fit_points = [0, height - 400, 200, height]
-        print("no left")
+        # print("no left")
 
     # if right lane is not detected, create own right lane
     # bias the line towards the right
@@ -135,7 +135,7 @@ def compute_average_lines(img,lines,width,height):
         right_fit_points = get_coordinates(img,right_average_line)
     except:
         right_fit_points = [width - 200, height, width, height - 400]
-        print("no right")
+        # print("no right")
 
     return [[left_fit_points],[right_fit_points]] #returning the final coordinates
 
@@ -152,6 +152,7 @@ def main(video=cv2.VideoCapture("lap5.mp4")):
     # needed to run file as main and as import
     True_Counter = True
 
+    # counters
     count1 = 0 # no lines counter
     count2 = 0 # no avg lines counter
     
@@ -222,6 +223,11 @@ def main(video=cv2.VideoCapture("lap5.mp4")):
         except:
             # logs if a frame doesn't have an average line
             count2 += 1
+
+            # if unable to get steering or throttle value, program crashes
+            # forces car to go straight at low moving speed  
+            steering = 0.5 
+            throttle = 0.1
 
         cv2.imshow("frame", frame)
 
