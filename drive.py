@@ -1,5 +1,6 @@
 import depthai as dai
 import lane_detection
+import line_follow
 import VESC_class as VESC
 
 def main():
@@ -41,8 +42,12 @@ def main():
                 videoIn = video.get()
                 orig_frame = videoIn.getCvFrame()
 
-                # calculate steering and throttle based on lane_detection
+                ## calculate steering and throttle based on lane_detection
                 steering, throttle = lane_detection.main(orig_frame)
+
+                ## calculate steering adn throttle based on line_follow
+                # steering, throttle = line_follow.main(orig_frame)
+
                 steering_val.append(steering)
                 throttle_val.append(throttle)
             
