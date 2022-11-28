@@ -1,9 +1,9 @@
 import numpy as np
 
 class motorController():
-    def getControllerVal(self, xAvg, yAvg, width):
+    def getControllerVal(self, xAvg, yAvg, width, height):
         # getter function to get steering and throttle
-        angle = self.calcAngle(xAvg,yAvg,width)
+        angle = self.calcAngle(xAvg,yAvg,width,height)
 
         steering = self.calcSteering(angle)
         throttle = self.calcThrottle(angle)
@@ -21,18 +21,19 @@ class motorController():
 
         # scale line based on throttle val
         hypo_max = np.sqrt(x1**2 + y1**2)
-        hypo = (hypo_max * throttle)/2
+        hypo = (hypo_max * throttle)/1.5 
 
         x2 = int(x1 + hypo*np.cos(angle))
         y2 = int(y1 - hypo*np.sin(angle))
 
         return x1, x2, y1, y2   
         
-    def calcAngle(self, xAvg, yAvg, width):
+    def calcAngle(self, xAvg, yAvg, width, height):
         # calculate angle in radians based on given points
         x1 = int(width/2); x = xAvg - x1
+        y = height - yAvg
 
-        angle = np.arctan2(yAvg,x)
+        angle = np.arctan2(y,x)
 
         return angle
 

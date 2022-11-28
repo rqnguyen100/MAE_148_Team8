@@ -139,7 +139,7 @@ def compute_average_lines(img,lines,width,height):
 
     return [[left_fit_points],[right_fit_points]] #returning the final coordinates
 
-def main(video=cv2.VideoCapture("lap5.mp4")):
+def main(video=cv2.VideoCapture("lap2.mp4")):
     # lap1.mp4 is unedited full track
     # lap2.mp4 is right turn tester
     # lap3.mp4 is edited full track
@@ -214,7 +214,7 @@ def main(video=cv2.VideoCapture("lap5.mp4")):
                 xAvg = int(xSum/line_counter); yAvg = int(ySum/line_counter)
 
                 # gets angle, steering, and throttle value
-                angle, steering, throttle = car.getControllerVal(xAvg,yAvg,width)
+                angle, steering, throttle = car.getControllerVal(xAvg,yAvg,width,height)
                 x1s, x2s, y1s, y2s = car.steeringLine(angle, throttle, width, height)
                 cv2.line(frame, (x1s, y1s), (x2s, y2s), (255, 255, 255), 10)    
 

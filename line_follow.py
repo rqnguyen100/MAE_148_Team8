@@ -14,15 +14,12 @@ def single_contour(frame, thresh):
         else:
             # divide by 0 error
             cX, cY = 0, 0
-            zeroCounter += 1
-        
-        xAvg = cX; yAvg = cY
 
         # put text and highlight the center
         cv2.circle(frame, (cX, cY), 5, (0, 255, 0), -1)
         cv2.putText(frame, "centroid", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
-        return xAvg, yAvg
+        return cX, cY
 
 def multi_contour(frame, thresh):
     # find contours in the binary image
@@ -97,13 +94,13 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
         ret, thresh = cv2.threshold(gray_image,127,255,0)
 
         ## find controller inputs for one contour
-        # xAvg, yAvg = single_contour(frame, thresh)
+        xAvg, yAvg = single_contour(frame, thresh)
 
         ## find controller inputs for multiple contours
-        xAvg, yAvg = multi_contour(frame, thresh)
+        # xAvg, yAvg = multi_contour(frame, thresh)
 
         # find controller outputs
-        angle, steering, throttle = car.getControllerVal(xAvg,yAvg,width)
+        angle, steering, throttle = car.getControllerVal(xAvg,yAvg,width,height)
         x1s, x2s, y1s, y2s = car.steeringLine(angle, throttle, width, height)
         cv2.line(frame, (x1s, y1s), (x2s, y2s), (255, 255, 255), 10)    
 
