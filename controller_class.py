@@ -42,11 +42,11 @@ class motorController():
 
         # angle interval: [-pi, pi]
         # servo interval: [0, 1] -> not sure if 0 is left and right
-        # will assume 0.5 maps to pi/2, 0.0 maps to 0, 1.0 maps to pi
-        angle2steering_constant = 1/np.pi
+        # will assume 0.5 maps to pi/2, 0 maps to 1, 0 maps to pi
+        angle2steering_constant = -1/np.pi
 
         if angle > 0:
-            steering = angle2steering_constant*angle
+            steering = angle2steering_constant*(angle - np.pi/2) + 0.5
         else:
             # car will only accept [0, 1], so set to 0 if negative angle
             steering = 0
@@ -57,8 +57,8 @@ class motorController():
         # calculate throttle value 
         
         ## increase throttle based on angle
-        # throttle interval: [0.1, 0.5]
-        slope = (0.5-0.1)/(np.pi/2)
-        throttle = slope*angle + 0.1
+        # throttle interval: [0.05, 0.2]
+        slope = (0.2-0.05)/(np.pi/2)
+        throttle = slope*angle + 0.05
 
         return throttle

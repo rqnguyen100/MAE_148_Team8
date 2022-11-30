@@ -30,10 +30,10 @@ def main():
         video = device.getOutputQueue(name="video", maxSize=1, blocking=False)
 
         # Create VESC Object
-        # carVESC = VESC('/dev/ttyACM0') 
+        carVESC = VESC.VESC('/dev/ttyACM0') 
 
         # smoothing variables
-        instances = 10 # get n frame values and average to allow for smoothing
+        instances = 1 # get n frame values and average to allow for smoothing
         steering_val = []; throttle_val = [] # array to hold values
 
         while True:
@@ -43,10 +43,10 @@ def main():
                 orig_frame = videoIn.getCvFrame()
 
                 ## calculate steering and throttle based on lane_detection
-                steering, throttle = lane_detection.main(orig_frame)
+                # steering, throttle = lane_detection.main(orig_frame)
 
                 ## calculate steering adn throttle based on line_follow
-                # steering, throttle = line_follow.main(orig_frame)
+                steering, throttle = line_follow.main(orig_frame)
 
                 steering_val.append(steering)
                 throttle_val.append(throttle)
@@ -57,7 +57,7 @@ def main():
             print(steering_avg, throttle_avg)
             
             # Use VESC.run() to set steering and throttle
-            # carVESC.run(steering,throttle)
+            carVESC.run(steering,throttle)
 
             # reset steering and throttle vals
             steering_val = []; throttle_val = []

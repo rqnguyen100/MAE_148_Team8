@@ -59,7 +59,7 @@ def region_of_interest(image, width, height): #function for extracting region of
 
     # identify bounds in (x,y) format
     # currently targeting the lower half of the image
-    bounds = np.array([[[0,height],[0,height/2],[width,height/2],[width,height]]],dtype=np.int32)
+    bounds = np.array([[[100,height],[100,height/2],[width-100,height/2],[width-100,height]]],dtype=np.int32)
 
     # creates mask and returns specified region
     mask=np.zeros_like(image)

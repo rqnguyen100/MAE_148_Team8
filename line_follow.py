@@ -50,8 +50,11 @@ def multi_contour(frame, thresh):
         cv2.putText(frame, "yellow", (cX - 25, cY - 25),cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
     # find controller inputs
-    xAvg /= (len(contours) - zeroCounter)
-    yAvg /= (len(contours) - zeroCounter)
+    if (len(contours) - zeroCounter) != 0:
+        xAvg /= (len(contours) - zeroCounter)
+        yAvg /= (len(contours) - zeroCounter)
+    else:
+        xAvg = 500; yAvg = 500
 
     return xAvg, yAvg
 
@@ -74,7 +77,7 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
         else:
             orig_frame = video
 
-        #Reading the image file
+        # Reading the image file
         frame_copy = np.copy(orig_frame)
         height = frame_copy.shape[0]
         width  = frame_copy.shape[1]
@@ -82,8 +85,8 @@ def main(video=cv2.VideoCapture("lap2.mp4")):
 
         # HSV detection for yellow
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        lower = np.array([20, 50, 10], dtype="uint8")
-        upper = np.array([50, 255, 255], dtype="uint8")
+        lower = np.array([20, 50, 150], dtype="uint8")
+        upper = np.array([50, 100, 200], dtype="uint8")
         mask = cv2.inRange(hsv, lower, upper)
         res = cv2.bitwise_and(frame,frame, mask= mask)
 
